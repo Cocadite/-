@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pedido de Namoro - Especial</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --btn-dark: #2a2a35;
+            --text-muted: #a0a0b0;
+            --accent-pink: #ff4d6d;
+            --accent-rose: #ff0054;
+            --accent-red: #d90429;
+            --stem-green: #247339;
+            --gold: #ffb703;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #ffffff;
+        }
+
+        /* CONTAINER PRINCIPAL */
+        #main-container {
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* TELA 1: O PEDIDO */
+        #pedido-container {
+            text-align: center;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+            width: 100%;
+            padding: 20px;
+            opacity: 1;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 60px;
+            text-shadow: 0 0 20px rgba(255, 77, 109, 0.3);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .botoes {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            min-height: 300px;
+            width: 100%;
+        }
+
+        button {
+            padding: 18px 45px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+            touch-action: none;
+            outline: none;
+        }
+
+        #btn-sim {
+            background: linear-gradient(45deg, var(--accent-pink), #ff758f);
+            color: white;
+            box-shadow: 0 10px 25px rgba(255, 77, 109, 0.4);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-110%);
+            z-index: 5;
+        }
+
+        #btn-sim:active {
+            transform: translateX(-110%) scale(0.92);
+        }
+
+        #btn-nao {
+            background-color: var(--btn-dark);
+            color: var(--text-muted);
+            position: absolute;
+            left: 50%;
+            transform: translateX(10%);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 6;
+            font-weight: 500;
+        }
+
+        /* TELA 2: SUCESSO */
+        #sucesso-container {
+            display: none;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        #mensagem-sucesso {
+            color: #fff;
+            font-size: 1.8rem;
+            position: absolute;
+            top: 15%;
+            text-shadow: 0 0 25px rgba(255, 77, 109, 0.6);
+            text-align: center;
+            padding: 0 40px;
+            line-height: 1.5;
+            font-weight: 700;
+            z-index: 20;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUpFade 1.5s ease 3s forwards;
+        }
+
+        /* FLOWER ANIMATION */
+        .flower-wrapper {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            transform: scale(0.9);
+            margin-top: 50px;
+        }
+
+        .stem {
+            position: absolute;
+            background: linear-gradient(to top, #0c2b0c, var(--stem-green));
+            border-radius: 10px;
+            transform-origin: bottom center;
+            bottom: 80px;
+            width: 8px;
+            height: 0;
+            transition: height 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stem-center { left: calc(50% - 4px); }
+        .stem-left { left: calc(50% - 4px); transform: rotate(-25deg); }
+        .stem-right { left: calc(50% - 4px); transform: rotate(25deg); }
+
+        .flower-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .head-center { top: calc(100% - 310px); left: 50%; background: var(--accent-pink); box-shadow: 0 0 40px var(--accent-pink); }
+        .head-left { top: calc(100% - 250px); left: calc(50% - 85px); background: var(--accent-red); box-shadow: 0 0 40px var(--accent-red); }
+        .head-right { top: calc(100% - 250px); left: calc(50% + 85px); background: var(--accent-rose); box-shadow: 0 0 40px var(--accent-rose); }
+
+        .flower-head::after {
+            content: '';
+            position: absolute;
+            width: 35%;
+            height: 35%;
+            background: var(--gold);
+            border-radius: 50%;
+            top: 32.5%;
+            left: 32.5%;
+            box-shadow: 0 0 15px var(--gold);
+        }
+
+        .petal {
+            position: absolute;
+            width: 160%;
+            height: 70%;
+            background: inherit;
+            border-radius: 50%;
+            top: 15%;
+            left: -30%;
+            transform-origin: center;
+        }
+        .petal-2 { transform: rotate(60deg); }
+        .petal-3 { transform: rotate(120deg); }
+
+        /* GRASS */
+        .grass-container {
+            position: absolute;
+            bottom: 80px;
+            width: 100%;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .grass {
+            position: absolute;
+            background: linear-gradient(to top, #061a06, #113810);
+            border-radius: 10px 10px 0 0;
+            bottom: 0;
+            height: 0;
+            transition: height 1s ease;
+        }
+
+        /* PARTICLES */
+        .sparkle {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fff, 0 0 20px var(--accent-pink);
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        @keyframes slideUpFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes floatSparkle {
+            0% { transform: translateY(0) scale(0); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(-200px) translateX(var(--tx)) scale(1); opacity: 0; }
+        }
+
+        /* ESTADOS ATIVOS */
+        .growing .stem-center { height: 230px; }
+        .growing .stem-left, .growing .stem-right { height: 170px; }
+        .growing .flower-head { width: 50px; height: 50px; transform: translate(-50%, -50%) scale(1); }
+        .growing .grass { height: 80px; }
+        .growing .grass-1 { width: 8px; left: calc(50% - 50px); transform: rotate(-15deg); height: 90px; }
+        .growing .grass-2 { width: 7px; left: calc(50% + 20px); transform: rotate(12deg); height: 110px; }
+        .growing .grass-3 { width: 10px; left: calc(50% - 80px); transform: rotate(-25deg); height: 70px; }
+        .growing .grass-4 { width: 6px; left: calc(50% + 55px); transform: rotate(20deg); height: 100px; }
+    </style>
+</head>
+<body>
+
+    <div id="main-container">
+        <div id="pedido-container">
+            <h1>Quer namorar comigo? ❤️</h1>
+            <div class="botoes">
+                <button id="btn-sim">SIM!</button>
+                <button id="btn-nao">Não</button>
+            </div>
+        </div>
+
+        <div id="sucesso-container">
+            <div id="mensagem-sucesso">Eu já sabia!<br>Mal posso esperar pelo nosso futuro. 🌹</div>
+            <div class="flower-wrapper" id="flower-stage">
+                <div class="grass-container">
+                    <div class="grass grass-1"></div>
+                    <div class="grass grass-2"></div>
+                    <div class="grass grass-3"></div>
+                    <div class="grass grass-4"></div>
+                </div>
+                
+                <div class="stem stem-left"></div>
+                <div class="stem stem-center"></div>
+                <div class="stem stem-right"></div>
+                
+                <div class="flower-head head-left">
+                    <div class="petal petal-1"></div><div class="petal petal-2"></div><div class="petal petal-3"></div>
+                </div>
+                <div class="flower-head head-center">
+                    <div class="petal petal-1"></div><div class="petal petal-2"></div><div class="petal petal-3"></div>
+                </div>
+                <div class="flower-head head-right">
+                    <div class="petal petal-1"></div><div class="petal petal-2"></div><div class="petal petal-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Telegram WebApp Setup
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            tg.enableClosingConfirmation();
+            tg.headerColor = '#0b0b0e';
+            tg.backgroundColor = '#0b0b0e';
+        }
+
+        const btnSim = document.getElementById('btn-sim');
+        const btnNao = document.getElementById('btn-nao');
+        const pedidoContainer = document.getElementById('pedido-container');
+        const sucessoContainer = document.getElementById('sucesso-container');
+        const flowerStage = document.getElementById('flower-stage');
+
+        // Lógica do botão fugitivo
+        function moverBotaoNao() {
+            const container = document.querySelector('.botoes');
+            const rect = container.getBoundingClientRect();
+            
+            // Margem de segurança
+            const margin = 20;
+            const maxX = rect.width - btnNao.offsetWidth - margin;
+            const maxY = rect.height - btnNao.offsetHeight - margin;
+            
+            // Posição aleatória dentro do container de botões
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+            
+            // Remove o transform inicial e aplica posição absoluta
+            btnNao.style.left = `${newX}px`;
+            btnNao.style.top = `${newY}px`;
+            btnNao.style.transform = 'none';
+            
+            // Feedback tátil se disponível
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        btnNao.addEventListener('mouseover', moverBotaoNao);
+        btnNao.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moverBotaoNao();
+        });
+
+        // Lógica do Sim
+        btnSim.addEventListener('click', () => {
+            // Esconde tela inicial
+            pedidoContainer.style.opacity = '0';
+            pedidoContainer.style.transform = 'scale(0.9)';
+            
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+
+            setTimeout(() => {
+                pedidoContainer.style.display = 'none';
+                sucessoContainer.style.display = 'flex';
+                
+                // Força reflow
+                sucessoContainer.offsetHeight;
+                sucessoContainer.style.opacity = '1';
+                
+                // Inicia animação da flor
+                setTimeout(() => {
+                    sucessoContainer.classList.add('growing');
+                    iniciarParticulas();
+                }, 500);
+            }, 800);
+        });
+
+        // Sistema de Partículas Aprimorado
+        function iniciarParticulas() {
+            const container = document.getElementById('main-container');
+            
+            function criarParticula() {
+                const p = document.createElement('div');
+                p.className = 'sparkle';
+                
+                const size = Math.random() * 6 + 2;
+                const tx = (Math.random() - 0.5) * 200; // Variação horizontal
+                
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+                p.style.left = `calc(50% + ${(Math.random() - 0.5) * 100}px)`;
+                p.style.bottom = '150px';
+                p.style.setProperty('--tx', `${tx}px`);
+                
+                const duration = Math.random() * 2 + 2;
+                p.style.animation = `floatSparkle ${duration}s ease-out forwards`;
+                
+                container.appendChild(p);
+                
+                setTimeout(() => p.remove(), duration * 1000);
+            }
+
+            // Burst inicial
+            for(let i=0; i<30; i++) {
+                setTimeout(criarParticula, i * 50);
+            }
+
+            // Fluxo contínuo
+            const interval = setInterval(criarParticula, 150);
+            setTimeout(() => clearInterval(interval), 8000);
+        }
+    </script>
+</body>
+</html>
